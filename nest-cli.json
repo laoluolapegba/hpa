@@ -3,6 +3,33 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "assets": [
+      {
+        "include": "i18n/**/*",
+        "watchAssets": true
+      }
+    ]
+  },
+  "projects": {
+    "common": {
+      "type": "library",
+      "root": "libs/common",
+      "entryFile": "index",
+      "sourceRoot": "libs/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
+    "telemetry": {
+      "type": "library",
+      "root": "libs/telemetry",
+      "entryFile": "index",
+      "sourceRoot": "libs/telemetry/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/telemetry/tsconfig.lib.json"
+      }
+    }
   }
 }

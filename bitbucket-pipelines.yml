@@ -1,0 +1,23 @@
+pipelines:
+  default:
+    import: bitbucket-pipeline-templates:shared/javascript-docker:on-any-branch-update
+
+  pull-requests:
+    feature/*:
+      import: bitbucket-pipeline-templates:shared/javascript-docker:on-pull-request
+
+    release/*:
+      import: bitbucket-pipeline-templates:shared/javascript-docker:on-pull-request
+
+    hotfix/*:
+      import: bitbucket-pipeline-templates:shared/javascript-docker:on-pull-request
+
+    bugfix/*:
+      import: bitbucket-pipeline-templates:shared/javascript-docker:on-pull-request
+
+    '**':
+      import: bitbucket-pipeline-templates:main:check-branch-name
+
+  branches:
+    main:
+      import: bitbucket-pipeline-templates:shared/javascript-docker:on-master-branch-update

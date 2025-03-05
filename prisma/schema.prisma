@@ -1,0 +1,733 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins", "metrics"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AcademicInstitution {
+  id                          String                      @id @unique
+  name                        String
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime?                   @updatedAt
+  isDeleted                   Boolean                     @default(false)
+  deletedAt                   DateTime?
+  practitionersQualifications PractitionerQualification[]
+
+  @@index([name])
+}
+
+model AcademicQualification {
+  id                          String                      @id @unique
+  name                        String
+  acronym                     String?
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime?                   @updatedAt
+  isDeleted                   Boolean                     @default(false)
+  deletedAt                   DateTime?
+  practitionersQualifications PractitionerQualification[]
+}
+
+model ApprovingAuthority {
+  id        String                   @id @unique
+  name      String
+  status    ApprovingAuthorityStatus
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime?                @updatedAt
+  isDeleted Boolean                  @default(false)
+  deletedAt DateTime?
+
+  @@index([name])
+  @@index([createdAt])
+}
+
+model Country {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(100)
+  iso3         String?   @unique(map: "iso3") @db.Char(3)
+  numeric_code String?   @db.Char(3)
+  iso2         String?   @unique(map: "iso2") @db.Char(2)
+  phonecode    String?   @db.VarChar(255)
+  capital      String?   @db.VarChar(255)
+  native       String?   @db.VarChar(255)
+  nationality  String    @db.VarChar(255)
+  latitude     Decimal?  @db.Decimal(10, 8)
+  longitude    Decimal?  @db.Decimal(11, 8)
+  emoji        String?
+  emojiU       String?
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @updatedAt @db.Timestamp(0)
+
+  organizationProprietors OrganizationProprietor[]
+}
+
+model EnergySource {
+  id                      String                 @id @unique
+  name                    String
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime?              @updatedAt
+  isDeleted               Boolean                @default(false)
+  deletedAt               DateTime?
+  facilitiesEnergySources FacilityEnergySource[]
+}
+
+model Facility {
+  id                     String    @id @unique
+  name                   String
+  organizationId         String
+  phone                  String
+  address1               String
+  address2               String?
+  closestLandmark        String
+  localGovernmentLcdaId  Int
+  latitude               Decimal?  @db.Decimal(10, 8)
+  longitude              Decimal?  @db.Decimal(11, 8)
+  buildingTypeId         Int
+  otherBuildingUse       String?
+  practitionerInChargeId String?   @unique
+  establishmentDate      DateTime
+  categoryId             String
+  hasAmbulanceService    Boolean
+  hasEmergencyService    Boolean
+  couchCount             Int
+  observationBedCount    Int
+  admissionBedCount      Int
+  wardCount              Int
+  toiletCount            Int
+  attendantStaffCount    Int?
+  adminStaffCount        Int?
+  securityStaffCount     Int?
+  otherStaffCount        Int?
+  createdAt              DateTime  @default(now())
+  createdByUserId        String
+  innerSketchUrl         String?
+  taxReceiptUrl          String?
+  updatedAt              DateTime? @updatedAt
+  isDeleted              Boolean   @default(false)
+  deletedAt              DateTime?
+
+  buildingType                FacilityBuildingType                 @relation(fields: [buildingTypeId], references: [id])
+  buildingUses                FacilityFacilityBuildingUseXref[]
+  organization                Organization                         @relation(fields: [organizationId], references: [id])
+  localGovernmentLCDA         LocalGovernmentLCDA                  @relation(fields: [localGovernmentLcdaId], references: [id])
+  services                    FacilityService[]
+  practitioners               FacilityPractitioner[]
+  qualifications              FacilityQualification[]
+  medicalWasteDisposalMethods FacilityMedicalWasteDisposalMethod[]
+  humanWasteDisposalMethods   FacilityHumanWasteDisposalMethod[]
+  refuseDisposalMethods       FacilityRefuseDisposalMethod[]
+  energySources               FacilityEnergySource[]
+  waterSources                FacilityWaterSources[]
+  practitionerInCharge        FacilityPractitioner?                @relation("practitionerInCharge", fields: [practitionerInChargeId], references: [id])
+  licenseApplications         FacilityLicenseApplication[]
+  category                    FacilityCategory                     @relation(fields: [categoryId], references: [id])
+  createdBy                   User                                 @relation(fields: [createdByUserId], references: [id])
+
+  @@index([createdAt])
+  @@index([name])
+}
+
+model FacilityBuildingType {
+  id         Int        @id() @default(autoincrement())
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime?  @updatedAt
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?
+  facilities Facility[]
+}
+
+model FacilityBuildingUse {
+  id                     String                            @id @unique
+  name                   String
+  createdAt              DateTime                          @default(now())
+  updatedAt              DateTime?                         @updatedAt
+  isDeleted              Boolean                           @default(false)
+  deletedAt              DateTime?
+  facilitiesBuildingUses FacilityFacilityBuildingUseXref[]
+}
+
+model FacilityCategory {
+  id                String     @id @unique
+  name              String
+  registrationCost  Int
+  renewalCost       Int
+  isAllDay          Boolean
+  hasCouch          Boolean
+  hasObservationBed Boolean
+  hasInPatientBed   Boolean
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime?  @updatedAt
+  isDeleted         Boolean    @default(false)
+  deletedAt         DateTime?
+  facilities        Facility[]
+}
+
+model FacilityEnergySource {
+  id         String       @id @unique
+  facilityId String
+  sourceId   String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime?    @updatedAt
+  facility   Facility     @relation(fields: [facilityId], references: [id])
+  source     EnergySource @relation(fields: [sourceId], references: [id])
+
+  @@unique([facilityId, sourceId])
+}
+
+model FacilityFacilityBuildingUseXref {
+  id                    String    @id @unique
+  facilityBuildingUseId String
+  facilityId            String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime?
+
+  use      FacilityBuildingUse @relation(fields: [facilityBuildingUseId], references: [id])
+  facility Facility            @relation(fields: [facilityId], references: [id])
+
+  @@unique([facilityBuildingUseId, facilityId])
+}
+
+model FacilityHumanWasteDisposalMethod {
+  id         String                   @id @unique
+  facilityId String
+  methodId   String
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime?                @updatedAt
+  facility   Facility                 @relation(fields: [facilityId], references: [id])
+  method     HumanWasteDisposalMethod @relation(fields: [methodId], references: [id])
+
+  @@unique([facilityId, methodId])
+}
+
+model FacilityLicenseApplication {
+  id              String                           @id @unique
+  facilityId      String
+  type            FacilityLicenseApplicationType
+  status          FacilityLicenseApplicationStatus @default(PENDING)
+  createdAt       DateTime                         @default(now())
+  updatedAt       DateTime?                        @updatedAt
+  approvedAt      DateTime?
+  createdByUserId String
+
+  facility  Facility                              @relation(fields: [facilityId], references: [id])
+  createdBy User                                  @relation(fields: [createdByUserId], references: [id])
+  actionLog FacilityLicenseApplicationActionLog[]
+  documents FacilityLicenseApplicationDocument?
+}
+
+model FacilityLicenseApplicationDocument {
+  id                          String  @id @unique
+  applicationId               String  @unique
+  taxReceiptUrl               String?
+  innerSketchUrl              String?
+  lawmaCertificateUrl         String?
+  hmisLetterUrl               String?
+  affidavitUrl                String?
+  intentLetterUrl             String?
+  lawmaLetterUrl              String?
+  hefamaaLetterUrl            String?
+  latestLicenseCertificateUrl String?
+
+  application FacilityLicenseApplication @relation(fields: [applicationId], references: [id])
+}
+
+model FacilityLicenseApplicationActionLog {
+  id              String                           @id @unique
+  applicationId   String
+  action          FacilityLicenseApplicationAction
+  createdByUserId String
+  createdAt       DateTime                         @default(now())
+
+  application FacilityLicenseApplication @relation(fields: [applicationId], references: [id])
+  createdBy   User                       @relation(fields: [createdByUserId], references: [id])
+}
+
+model FacilityMedicalWasteDisposalMethod {
+  id         String                     @id @unique
+  facilityId String
+  methodId   String
+  createdAt  DateTime                   @default(now())
+  updatedAt  DateTime                   @updatedAt
+  facilty    Facility                   @relation(fields: [facilityId], references: [id])
+  method     MedicalWasteDisposalMethod @relation(fields: [methodId], references: [id])
+
+  @@unique([facilityId, methodId])
+}
+
+model FacilityRefuseDisposalMethod {
+  id         String               @id @unique
+  facilityId String
+  methodId   String
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  facilty    Facility             @relation(fields: [facilityId], references: [id])
+  method     RefuseDisposalMethod @relation(fields: [methodId], references: [id])
+}
+
+model FacilityPractitioner {
+  id               String                   @id @unique
+  practitionerId   String
+  facilityId       String
+  occupationId     String
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime?                @updatedAt
+  isDeleted        Boolean                  @default(false)
+  deletedAt        DateTime?
+  practitioner     Practitioner             @relation(fields: [practitionerId], references: [id])
+  facility         Facility                 @relation(fields: [facilityId], references: [id])
+  type             FacilityPractitionerType
+  occupation       PractitionerOccupation   @relation(fields: [occupationId], references: [id])
+  inChargeFacility Facility?                @relation("practitionerInCharge")
+
+  @@unique([practitionerId, facilityId])
+}
+
+// model FacilityPractitionerType {
+//   id                    Int                    @id @unique
+//   name                  String
+//   createdAt             DateTime               @default(now())
+//   updatedAt             DateTime?              @updatedAt
+//   isDeleted             Boolean                @default(false)
+//   deletedAt             DateTime?
+//   facilityPractitioners FacilityPractitioner[]
+// }
+
+model FacilityQualification {
+  id         String                      @id @unique
+  typeId     String
+  facilityId String
+  startDate  DateTime
+  endDate    DateTime?
+  status     FacilityQualificationStatus
+  createdAt  DateTime                    @default(now())
+  updatedAt  DateTime                    @updatedAt
+  isDeleted  Boolean                     @default(false)
+  deletedAt  DateTime?
+
+  type     OrganizationQualificationType @relation(fields: [typeId], references: [id])
+  facility Facility                      @relation(fields: [facilityId], references: [id])
+}
+
+model FacilityService {
+  id               String                           @id @unique
+  facilityId       String
+  serviceId        String
+  createdAt        DateTime                         @default(now())
+  updatedAt        DateTime?                        @updatedAt
+  operatingTimes   FacilityServiceOperatingTime[]
+  unavailableTimes FacilityServiceUnavailableTime[]
+  isDeleted        Boolean                          @default(false)
+  deletedAt        DateTime?
+
+  facility              Facility                            @relation(fields: [facilityId], references: [id])
+  service               HealthService                       @relation(fields: [serviceId], references: [id])
+  serviceOptionFeatures FacilityServiceOptionFeatureValue[]
+
+  @@unique([facilityId, serviceId])
+}
+
+model FacilityServiceOptionFeatureValue {
+  id                     String    @id @unique
+  facilityServiceId      String
+  serviceOptionFeatureId String
+  value                  String
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime? @updatedAt
+
+  facilityService FacilityService            @relation(fields: [facilityServiceId], references: [id])
+  serviceFeature  HealthServiceOptionFeature @relation(fields: [serviceOptionFeatureId], references: [id])
+
+  @@unique([facilityServiceId, serviceOptionFeatureId])
+}
+
+model FacilityServiceOperatingTime {
+  id                String       @id @unique()
+  facilityServiceId String
+  day               OperatingDay
+  isAllDay          Boolean
+  startTime         String?
+  endTime           String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime?    @updatedAt
+  isDeleted         Boolean      @default(false)
+  deletedAt         DateTime?
+
+  service FacilityService @relation(fields: [facilityServiceId], references: [id])
+
+  @@unique([facilityServiceId, day])
+}
+
+model FacilityServiceUnavailableTime {
+  id                String    @id @unique
+  facilityServiceId String
+  date              DateTime
+  startTime         String
+  endTime           String
+  reason            String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @updatedAt
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+
+  service FacilityService @relation(fields: [facilityServiceId], references: [id])
+
+  @@unique([facilityServiceId, date, startTime])
+}
+
+model FacilityWaterSources {
+  id         String      @id @unique
+  facilityId String
+  sourceId   String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime?   @updatedAt
+  facility   Facility    @relation(fields: [facilityId], references: [id])
+  source     WaterSource @relation(fields: [sourceId], references: [id])
+
+  @@unique([facilityId, sourceId])
+}
+
+model GeneralOccupation {
+  id          String                   @id @unique
+  name        String
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime?                @updatedAt
+  isDeleted   Boolean                  @default(false)
+  deletedAt   DateTime?
+  proprietors OrganizationProprietor[]
+}
+
+model HealthService {
+  id                 String            @id() @unique
+  name               String
+  hasFixedLocation   Boolean           @default(true)
+  serviceOptionId    String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime?         @updatedAt
+  isDeleted          Boolean           @default(false)
+  deletedAt          DateTime?
+  facilitiesServices FacilityService[]
+
+  serviceOption       HealthServiceOption?                  @relation(fields: [serviceOptionId], references: [id])
+  servicesOccupations HealthServicePractitionerOccupation[]
+}
+
+model HealthServicePractitionerOccupation {
+  id                       String    @id @unique
+  healthServiceId          String
+  practitionerOccupationId String
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime? @updatedAt
+
+  service    HealthService          @relation(fields: [healthServiceId], references: [id])
+  occupation PractitionerOccupation @relation(fields: [practitionerOccupationId], references: [id])
+
+  @@unique([healthServiceId, practitionerOccupationId])
+}
+
+model HealthServiceOption {
+  id        String                       @id @unique
+  name      String                       @unique
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime?                    @updatedAt
+  services  HealthService[]
+  features  HealthServiceOptionFeature[]
+  isDeleted Boolean                      @default(false)
+  deletedAt DateTime?
+}
+
+model HealthServiceOptionFeature {
+  id              String    @id @unique
+  serviceOptionId String
+  description     String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  serviceOption            HealthServiceOption                 @relation(fields: [serviceOptionId], references: [id])
+  featuredFacilityServices FacilityServiceOptionFeatureValue[]
+}
+
+model HumanWasteDisposalMethod {
+  id                String                             @id @unique
+  name              String
+  createdAt         DateTime                           @default(now())
+  updatedAt         DateTime?                          @updatedAt
+  isDeleted         Boolean                            @default(false)
+  deletedAt         DateTime?
+  methodsFacilities FacilityHumanWasteDisposalMethod[]
+}
+
+model LocalGovernment {
+  id                   Int                   @id() @default(autoincrement())
+  name                 String                @unique()
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime?             @updatedAt
+  localGovernmentLCDAs LocalGovernmentLCDA[]
+}
+
+model LocalGovernmentLCDA {
+  id                Int       @id() @default(autoincrement())
+  name              String
+  localGovernmentId Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @updatedAt
+
+  localGovernment LocalGovernment @relation(fields: [localGovernmentId], references: [id])
+  facilities      Facility[]
+}
+
+model MedicalWasteDisposalMethod {
+  id                String                               @id @unique
+  name              String
+  createdAt         DateTime                             @default(now())
+  updatedAt         DateTime?                            @updatedAt
+  isDeleted         Boolean                              @default(false)
+  deletedAt         DateTime?
+  methodsFacilities FacilityMedicalWasteDisposalMethod[]
+}
+
+model Organization {
+  id                String                   @id @unique
+  name              String
+  email             String?                  @unique
+  phone             String?                  @unique
+  cacNumber         String                   @unique
+  cacCertificateUrl String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime?                @updatedAt
+  isDeleted         Boolean                  @default(false)
+  deletedAt         DateTime?
+  proprietors       OrganizationProprietor[]
+  sector            OrganizationSector
+  facilities        Facility[]
+  createdByUserId   String
+  createdBy         User                     @relation(fields: [createdByUserId], references: [id])
+
+  @@index([createdAt])
+  @@index([name])
+}
+
+model OrganizationProprietor {
+  id             String    @id @unique
+  firstName      String
+  lastName       String
+  address1       String
+  address2       String?
+  occupationId   String
+  organizationId String
+  nationalityId  Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime? @updatedAt
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
+
+  occupation   GeneralOccupation @relation(fields: [occupationId], references: [id])
+  organization Organization      @relation(fields: [organizationId], references: [id])
+  nationality  Country           @relation(fields: [nationalityId], references: [id])
+}
+
+model OrganizationQualificationType {
+  id                       String                  @id @unique
+  name                     String
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime?               @updatedAt
+  isDeleted                Boolean                 @default(false)
+  deletedAt                DateTime?
+  facilitiesQualifications FacilityQualification[]
+}
+
+model PracticingLicenseBody {
+  id                              String                          @id @unique
+  name                            String
+  acronym                         PracticingLicenseBodyAcronym    @unique
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime?                       @updatedAt
+  practitionersPracticingLicenses PractitionerPracticingLicense[]
+}
+
+model Practitioner {
+  id          String    @id @unique
+  firstName   String
+  lastName    String
+  middleName  String?
+  phoneNumber String?   @unique
+  email       String?   @unique
+  address     String
+  lassrraUrl  String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  qualifications          PractitionerQualification[]
+  practitionersFacilities FacilityPractitioner[]
+  practicingLicenses      PractitionerPracticingLicense[]
+}
+
+model PractitionerOccupation {
+  id                      String                                @id @unique
+  name                    String
+  createdAt               DateTime                              @default(now())
+  updatedAt               DateTime?                             @updatedAt
+  isDeleted               Boolean                               @default(false)
+  deletedAt               DateTime?
+  facilitiesPractitioners FacilityPractitioner[]
+  occupationsServices     HealthServicePractitionerOccupation[]
+}
+
+model PractitionerPracticingLicense {
+  id                 String                       @id @unique
+  practitionerId     String
+  licenseBodyAcronym PracticingLicenseBodyAcronym
+  licenseId          String
+  licenseUrl         String?
+  date               DateTime                     @db.Date
+  startDate          DateTime
+  endDate            DateTime?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime?                    @updatedAt
+  isActive           Boolean
+
+  practitioner Practitioner          @relation(fields: [practitionerId], references: [id])
+  licenseBody  PracticingLicenseBody @relation(fields: [licenseBodyAcronym], references: [acronym])
+
+  @@unique([licenseBodyAcronym, licenseId, startDate])
+  @@index([licenseBodyAcronym, licenseId])
+}
+
+model PractitionerQualification {
+  id                           String    @id @unique
+  practitionerId               String
+  qualificationId              String
+  academicInstitutionId        String?
+  registrationNumber           String
+  certificateUrl               String?
+  date                         DateTime  @db.Date
+  startDate                    DateTime
+  endDate                      DateTime?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime? @updatedAt
+  isDeleted                    Boolean   @default(false)
+  deletedAt                    DateTime?
+  otherAcademicInstitutionName String?
+
+  academicInstitution AcademicInstitution?  @relation(fields: [academicInstitutionId], references: [id])
+  practitioner        Practitioner          @relation(fields: [practitionerId], references: [id])
+  qualification       AcademicQualification @relation(fields: [qualificationId], references: [id])
+
+  @@unique([qualificationId, registrationNumber])
+  @@index([practitionerId, registrationNumber])
+  @@index([registrationNumber])
+}
+
+model RefuseDisposalMethod {
+  id                String                         @id @unique
+  name              String
+  createdAt         DateTime                       @default(now())
+  updatedAt         DateTime?                      @updatedAt
+  isDeleted         Boolean                        @default(false)
+  deletedAt         DateTime?
+  methodsFacilities FacilityRefuseDisposalMethod[]
+}
+
+model User {
+  id        String     @id @unique
+  email     String     @unique
+  firstName String
+  lastName  String
+  oktaId    String?    @unique
+  isDeleted Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime?  @updatedAt
+  lastLogin DateTime?
+  deletedAt DateTime?
+  status    UserStatus @default(ENABLED)
+  deletedBy String?
+
+  deletedByUser                     User?                                 @relation("deletedByUser", fields: [deletedBy], references: [id])
+  usersDeleted                      User[]                                @relation("deletedByUser")
+  licenseApplications               FacilityLicenseApplication[]
+  facilitylicenseApplicationActions FacilityLicenseApplicationActionLog[]
+  createdOrganizations              Organization[]
+  createdFacilities                 Facility[]
+
+  @@index([createdAt])
+}
+
+model WaterSource {
+  id                String                 @id @unique
+  name              String
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime?              @updatedAt
+  isDeleted         Boolean                @default(false)
+  deletedAt         DateTime?
+  sourcesFacilities FacilityWaterSources[]
+}
+
+enum ApprovingAuthorityStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FacilityLicenseApplicationAction {
+  APPLY
+  APPROVE
+  CANCEL
+  QUERY
+  DECLINE
+}
+
+enum FacilityLicenseApplicationStatus {
+  PENDING
+  APPROVED
+  QUERY
+  DECLINED
+  CANCELLED
+}
+
+enum FacilityLicenseApplicationType {
+  REGISTRATION
+  RENEWAL
+}
+
+enum FacilityPractitionerType {
+  FULL_TIME
+  PART_TIME
+}
+
+enum FacilityQualificationStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum OrganizationSector {
+  PRIVATE
+  PUBLIC
+}
+
+enum OperatingDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum PracticingLicenseBodyAcronym {
+  MDCN
+  NMCN
+  RRBN
+  ODORBN
+  MRTB
+}
+
+enum UserStatus {
+  ENABLED
+  DISABLED
+}
